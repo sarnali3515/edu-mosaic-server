@@ -3,10 +3,9 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const cookieParser = require('cookie-parser')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
-
 
 // middlewares
 const corsOptions = {
@@ -17,8 +16,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser())
-
-
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.sgvl42h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -62,7 +59,6 @@ async function run() {
             })
         }
 
-
         // users related api
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -75,10 +71,25 @@ async function run() {
             res.send(result);
         })
 
+
+        // all courses api
         app.get('/courses', async (req, res) => {
             const result = await courseCollection.find().toArray();
             res.send(result);
         })
+
+        app.get('/course/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await courseCollection.findOne(query)
+            res.send(result);
+        })
+
+
+
+
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
