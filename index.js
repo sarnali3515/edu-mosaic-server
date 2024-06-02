@@ -1,14 +1,22 @@
 const express = require('express');
 const app = express();
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
 
 // middlewares
-app.use(cors());
+const corsOptions = {
+    origin: ['http://localhost:5173'],
+    Credential: true,
+    optionSuccessStatus: 200,
+}
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser())
 
 
 
@@ -31,7 +39,41 @@ async function run() {
         const courseCollection = client.db('eduMosaicDB').collection('courses')
         const userCollection = client.db('eduMosaicDB').collection('users')
 
+        //jwt api
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.send({ token });
+        })
 
+        // middlewares jwt
+        const verifyToken = (req, res, next) => {
+            // console.log("inside verify", req.headers.authorization);
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: 'forbidden access' });
+            }
+            const token = req.headers.authorization.split(' ')[1];
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: 'forbidden access' })
+                }
+                req.decoded = decoded;
+                next();
+            })
+        }
+
+
+        // users related api
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email }
+            const existingUser = await userCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'user already exists', insertedId: null })
+            }
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
 
         app.get('/courses', async (req, res) => {
             const result = await courseCollection.find().toArray();
