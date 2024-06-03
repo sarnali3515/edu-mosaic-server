@@ -93,6 +93,13 @@ async function run() {
             res.send(result);
         })
 
+        // get added class of teacher
+        app.get('/my-classes/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { teacherEmail: email }
+            const result = await courseCollection.find(query).toArray()
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
