@@ -263,6 +263,18 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/enroll-class', async (req, res) => {
+            const result = await enrollClassCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.get('/enroll-class/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { email: email }
+            const result = await enrollClassCollection.find(query).toArray()
+            res.send(result);
+        })
+
 
 
         // Send a ping to confirm a successful connection
