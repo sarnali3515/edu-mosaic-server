@@ -111,6 +111,31 @@ async function run() {
             res.send(result);
         })
 
+        app.patch('/teacher-req/approve/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: 'Approved'
+                }
+            }
+            const result = await teacherReqCollection.updateOne(filter, updatedDoc);
+            res.send();
+        })
+        app.patch('/teacher-req/reject/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: 'Rejected'
+                }
+            }
+            const result = await teacherReqCollection.updateOne(filter, updatedDoc);
+            res.send();
+        })
+
+
+
         // all courses api
         app.get('/courses', async (req, res) => {
             const result = await courseCollection.find().toArray();
