@@ -5,6 +5,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 // middlewares
@@ -36,6 +37,7 @@ async function run() {
         const courseCollection = client.db('eduMosaicDB').collection('courses')
         const userCollection = client.db('eduMosaicDB').collection('users')
         const teacherReqCollection = client.db('eduMosaicDB').collection('teacherReq')
+        const enrollClassCollection = client.db('eduMosaicDB').collection('enrollClass')
 
         //jwt api
         app.post('/jwt', async (req, res) => {
@@ -172,7 +174,7 @@ async function run() {
                 }
             }
             const result = await teacherReqCollection.updateOne(filter, updatedDoc);
-            res.send();
+            res.send(result);
         })
 
         // all courses api
@@ -188,6 +190,7 @@ async function run() {
             const result = await courseCollection.findOne(query)
             res.send(result);
         })
+
 
         // post course
         app.post('/courses', async (req, res) => {
@@ -234,6 +237,29 @@ async function run() {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await courseCollection.deleteOne(query)
+            res.send(result);
+        })
+
+
+
+        //  payment intent
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        })
+
+        app.post('/enroll-class', async (req, res) => {
+            const payment = req.body;
+            const result = await enrollClassCollection.insertOne(payment);
             res.send(result);
         })
 
