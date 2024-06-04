@@ -35,6 +35,7 @@ async function run() {
 
         const courseCollection = client.db('eduMosaicDB').collection('courses')
         const userCollection = client.db('eduMosaicDB').collection('users')
+        const teacherReqCollection = client.db('eduMosaicDB').collection('teacherReq')
 
         //jwt api
         app.post('/jwt', async (req, res) => {
@@ -71,6 +72,44 @@ async function run() {
             res.send(result);
         })
 
+        // get all users
+        app.get('/users', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { email: email }
+            const result = await userCollection.findOne(query)
+            res.send(result);
+        })
+
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc);
+            res.send();
+
+        })
+
+
+        // teacher req post
+        app.post('/teacher-req', async (req, res) => {
+            const teacherReqData = req.body;
+            const result = await teacherReqCollection.insertOne(teacherReqData);
+            res.send(result);
+        })
+
+        app.get('/teacher-req', async (req, res) => {
+            const result = await teacherReqCollection.find().toArray();
+            res.send(result);
+        })
 
         // all courses api
         app.get('/courses', async (req, res) => {
