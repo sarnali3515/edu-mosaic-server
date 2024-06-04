@@ -111,17 +111,58 @@ async function run() {
             res.send(result);
         })
 
-        app.patch('/teacher-req/approve/:id', async (req, res) => {
+        // app.patch('/teacher-req/approve/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const filter = { _id: new ObjectId(id) };
+        //     const updatedDoc = {
+        //         $set: {
+        //             status: 'Approved'
+        //         }
+        //     }
+
+        //     const result = await teacherReqCollection.updateOne(filter, updatedDoc);
+        //     res.send();
+        // })
+
+        app.patch("/teacher-req/approve/:id", async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
                 $set: {
-                    status: 'Approved'
+                    status: "Approved",
+                },
+            };
+
+            try {
+                const updateTeacherReqResult = await teacherReqCollection.updateOne(filter, updatedDoc);
+
+                if (updateTeacherReqResult.modifiedCount === 0) {
+                    return res.status(404).send("Teacher request not found or already approved.");
                 }
+
+                // Retrieve approved request details
+                const approvedReq = await teacherReqCollection.findOne(filter);
+                const userToUpdate = { email: approvedReq.email };
+
+
+                const updateUserRoleResult = await userCollection.updateOne(
+                    { email: userToUpdate.email },
+                    { $set: { role: "teacher" } }
+                );
+
+                if (updateUserRoleResult.modifiedCount > 0) {
+                    console.log("User role updated to 'teacher' successfully.");
+                    res.send({ message: "Teacher request approved and role updated successfully." });
+                } else {
+                    console.error("Failed to update user role.");
+                    res.status(500).send("Error updating user role. Teacher request approved.");
+                }
+            } catch (error) {
+                console.error("Error updating teacher request:", error);
+                res.status(500).send("Error approving teacher request.");
             }
-            const result = await teacherReqCollection.updateOne(filter, updatedDoc);
-            res.send();
-        })
+        });
+
         app.patch('/teacher-req/reject/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
@@ -133,8 +174,6 @@ async function run() {
             const result = await teacherReqCollection.updateOne(filter, updatedDoc);
             res.send();
         })
-
-
 
         // all courses api
         app.get('/courses', async (req, res) => {
@@ -155,6 +194,31 @@ async function run() {
             const classData = req.body;
             const result = await courseCollection.insertOne(classData);
             res.send(result);
+        })
+
+
+        app.patch('/courses/approve/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: 'Approved'
+                }
+            }
+            const result = await courseCollection.updateOne(filter, updatedDoc);
+            res.send();
+        })
+
+        app.patch('/courses/reject/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: 'Rejected'
+                }
+            }
+            const result = await courseCollection.updateOne(filter, updatedDoc);
+            res.send();
         })
 
         // get added class of teacher
