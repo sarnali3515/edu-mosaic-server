@@ -183,6 +183,8 @@ async function run() {
             res.send(result);
         })
 
+
+
         //get single course
         app.get('/course/:id', async (req, res) => {
             const id = req.params.id
@@ -196,6 +198,20 @@ async function run() {
         app.post('/courses', async (req, res) => {
             const classData = req.body;
             const result = await courseCollection.insertOne(classData);
+            res.send(result);
+        })
+
+        app.put('/my-classes/update/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedClassData = req.body;
+            const query = { _id: new ObjectId(id) }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    ...updatedClassData,
+                },
+            }
+            const result = await courseCollection.updateOne(query, updateDoc, options);
             res.send(result);
         })
 
