@@ -297,8 +297,20 @@ async function run() {
 
         app.post('/enroll-class', async (req, res) => {
             const payment = req.body;
-            const result = await enrollClassCollection.insertOne(payment);
-            res.send(result);
+
+            try {
+                const result = await enrollClassCollection.insertOne(payment);
+
+                const query = { _id: new ObjectId(req.body.classId) };
+                const updateDoc = { $inc: { totalEnrollment: 1 } };
+
+                const updateTotalEnrollment = await courseCollection.updateOne(query, updateDoc);
+
+                res.send({ result, updateTotalEnrollment });
+            } catch (err) {
+                console.error(err);
+                res.status(500).send("Internal Server Error");
+            }
         })
 
         app.get('/enroll-class', async (req, res) => {
@@ -319,9 +331,6 @@ async function run() {
             const result = await enrollClassCollection.findOne(query)
             res.send(result);
         })
-
-
-
 
 
         // Send a ping to confirm a successful connection
