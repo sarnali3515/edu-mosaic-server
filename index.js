@@ -265,6 +265,19 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/assignments/:classId', async (req, res) => {
+            const classId = req.params.classId
+            const query = { classId: classId }
+            const result = await assignmentsCollection.find(query).toArray()
+            res.send(result);
+        })
+
+        app.get('/enrollments/:classId', async (req, res) => {
+            const classId = req.params.classId
+            const query = { classId: classId }
+            const result = await enrollClassCollection.find(query).toArray()
+            res.send(result);
+        })
 
 
         //  payment intent
@@ -299,6 +312,15 @@ async function run() {
             const result = await enrollClassCollection.find(query).toArray()
             res.send(result);
         })
+
+        app.get('/enrolled-class/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await enrollClassCollection.findOne(query)
+            res.send(result);
+        })
+
+
 
 
 
