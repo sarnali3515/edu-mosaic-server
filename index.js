@@ -38,6 +38,7 @@ async function run() {
         const userCollection = client.db('eduMosaicDB').collection('users')
         const teacherReqCollection = client.db('eduMosaicDB').collection('teacherReq')
         const enrollClassCollection = client.db('eduMosaicDB').collection('enrollClass')
+        const assignmentsCollection = client.db('eduMosaicDB').collection('assignments')
 
         //jwt api
         app.post('/jwt', async (req, res) => {
@@ -253,6 +254,14 @@ async function run() {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await courseCollection.deleteOne(query)
+            res.send(result);
+        })
+
+
+        // assignment 
+        app.post('/assignments', async (req, res) => {
+            const classData = req.body;
+            const result = await assignmentsCollection.insertOne(classData);
             res.send(result);
         })
 
