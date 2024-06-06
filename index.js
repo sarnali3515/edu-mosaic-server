@@ -39,6 +39,7 @@ async function run() {
         const teacherReqCollection = client.db('eduMosaicDB').collection('teacherReq')
         const enrollClassCollection = client.db('eduMosaicDB').collection('enrollClass')
         const assignmentsCollection = client.db('eduMosaicDB').collection('assignments')
+        const evaluationsCollection = client.db('eduMosaicDB').collection('evaluations')
 
         //jwt api
         app.post('/jwt', async (req, res) => {
@@ -272,6 +273,12 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/enrollment/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await enrollClassCollection.findOne(query)
+            res.send(result);
+        })
         app.get('/enrollments/:classId', async (req, res) => {
             const classId = req.params.classId
             const query = { classId: classId }
@@ -332,6 +339,17 @@ async function run() {
             res.send(result);
         })
 
+        // teaching evaluation
+        app.post('/evaluations', async (req, res) => {
+            const evaluationData = req.body;
+            const result = await evaluationsCollection.insertOne(evaluationData);
+            res.send(result);
+        })
+
+        app.get('/evaluations', async (req, res) => {
+            const result = await evaluationsCollection.find().toArray();
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
