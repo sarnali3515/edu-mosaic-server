@@ -40,6 +40,7 @@ async function run() {
         const enrollClassCollection = client.db('eduMosaicDB').collection('enrollClass')
         const assignmentsCollection = client.db('eduMosaicDB').collection('assignments')
         const evaluationsCollection = client.db('eduMosaicDB').collection('evaluations')
+        const assignmentSubmitCollection = client.db('eduMosaicDB').collection('assignmentSubmit')
 
         //jwt api
         app.post('/jwt', async (req, res) => {
@@ -77,10 +78,22 @@ async function run() {
         })
 
         // get all users
+        // app.get('/users', async (req, res) => {
+        //     const result = await userCollection.find().toArray();
+        //     res.send(result);
+        // })
         app.get('/users', async (req, res) => {
-            const result = await userCollection.find().toArray();
+            const { search } = req.query;
+            const query = search ? {
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } }
+                ]
+            } : {};
+
+            const result = await userCollection.find(query).toArray();
             res.send(result);
-        })
+        });
 
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email
@@ -114,6 +127,13 @@ async function run() {
             const result = await teacherReqCollection.find().toArray();
             res.send(result);
         })
+
+        // app.get('/teacher-req/:email', async (req, res) => {
+        //     const email = req.params.email
+        //     const query = { teacherEmail: email }
+        //     const result = await teacherReqCollection.findOne(query).toArray()
+        //     res.send(result);
+        // })
 
         // app.patch('/teacher-req/approve/:id', async (req, res) => {
         //     const id = req.params.id;
@@ -151,7 +171,7 @@ async function run() {
 
                 const updateUserRoleResult = await userCollection.updateOne(
                     { email: userToUpdate.email },
-                    { $set: { role: "teacher" } }
+                    { $set: { role: "teacher", status: "Approved" } }
                 );
 
                 if (updateUserRoleResult.modifiedCount > 0) {
@@ -167,17 +187,55 @@ async function run() {
             }
         });
 
-        app.patch('/teacher-req/reject/:id', async (req, res) => {
+        app.patch("/teacher-req/reject/:id", async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
                 $set: {
-                    status: 'Rejected'
+                    status: "Rejected",
+                },
+            };
+
+            try {
+                const updateTeacherReqResult = await teacherReqCollection.updateOne(filter, updatedDoc);
+
+                if (updateTeacherReqResult.modifiedCount === 0) {
+                    return res.status(404).send("Teacher request not found or approved or rejected.");
                 }
+
+                // Retrieve approved request details
+                const approvedReq = await teacherReqCollection.findOne(filter);
+                const userToUpdate = { email: approvedReq.email };
+
+
+                const updateUserRoleResult = await userCollection.updateOne(
+                    { email: userToUpdate.email },
+                    { $set: { status: "Rejected" } }
+                );
+
+                if (updateUserRoleResult.modifiedCount > 0) {
+                    console.log("User role updated to 'teacher' successfully.");
+                    res.send({ message: "Teacher request approved and role updated successfully." });
+                } else {
+                    console.error("Failed to update user role.");
+                    res.status(500).send("Error updating user role. Teacher request approved.");
+                }
+            } catch (error) {
+                console.error("Error updating teacher request:", error);
+                res.status(500).send("Error approving teacher request.");
             }
-            const result = await teacherReqCollection.updateOne(filter, updatedDoc);
-            res.send(result);
-        })
+        });
+        // app.patch('/teacher-req/reject/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const filter = { _id: new ObjectId(id) };
+        //     const updatedDoc = {
+        //         $set: {
+        //             status: 'Rejected'
+        //         }
+        //     }
+        //     const result = await teacherReqCollection.updateOne(filter, updatedDoc);
+        //     res.send(result);
+        // })
 
         // all courses api
         app.get('/courses', async (req, res) => {
@@ -258,7 +316,6 @@ async function run() {
             res.send(result);
         })
 
-
         // assignment 
         app.post('/assignments', async (req, res) => {
             const classData = req.body;
@@ -285,7 +342,6 @@ async function run() {
             const result = await enrollClassCollection.find(query).toArray()
             res.send(result);
         })
-
 
         //  payment intent
         app.post('/create-payment-intent', async (req, res) => {
@@ -348,6 +404,33 @@ async function run() {
 
         app.get('/evaluations', async (req, res) => {
             const result = await evaluationsCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.get('/evaluations/:classId', async (req, res) => {
+            const classId = req.params.classId
+            const query = { classId: classId }
+            const result = await evaluationsCollection.find(query).toArray()
+            res.send(result);
+        })
+
+        // assignment submission
+        app.post('/submit-assignment', async (req, res) => {
+            const assignmentSubData = req.body;
+            const result = await assignmentSubmitCollection.insertOne(assignmentSubData);
+            res.send(result);
+        })
+
+        app.get('/submit-assignment/:assignmentClassId', async (req, res) => {
+            const assignmentClassId = req.params.assignmentClassId
+            const query = { assignmentClassId: assignmentClassId }
+            const result = await assignmentSubmitCollection.find(query).toArray()
+            res.send(result);
+        })
+        app.get('/submit-day/:submissionDate', async (req, res) => {
+            const submissionDate = req.params.submissionDate
+            const query = { submissionDate: submissionDate }
+            const result = await assignmentSubmitCollection.find(query).toArray()
             res.send(result);
         })
 
