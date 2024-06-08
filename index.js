@@ -10,10 +10,11 @@ const port = process.env.PORT || 5000;
 
 // middlewares
 const corsOptions = {
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'https://edu-mosaic-275a3.web.app', 'https://edu-mosaic-275a3.firebaseapp.com'],
     Credential: true,
     optionSuccessStatus: 200,
 }
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser())
@@ -121,8 +122,7 @@ async function run() {
                 }
             }
             const result = await userCollection.updateOne(filter, updatedDoc);
-            res.send();
-
+            res.send(result);
         })
 
         // teacher req post
@@ -444,7 +444,7 @@ async function run() {
         })
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
