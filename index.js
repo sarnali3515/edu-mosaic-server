@@ -137,6 +137,13 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/teacher-req/:email', verifyToken, async (req, res) => {
+            const email = req.params.email
+            const query = { email: email }
+            const result = await teacherReqCollection.find(query).toArray()
+            res.send(result);
+        })
+
         // app.get('/teacher-req/:email', async (req, res) => {
         //     const email = req.params.email
         //     const query = { teacherEmail: email }
