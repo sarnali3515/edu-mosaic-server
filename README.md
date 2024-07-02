@@ -30,3 +30,14 @@ authentication, ensuring a seamless and secure learning experience.
 - MongoDB
 - JSON Web Tokens (JWT)
 
+# Getting Started
+## Prerequisites
+Ensure you have Node.js, npm or yarn, and Git installed.
+
+## Installation
+- Clone the repository: git clone https://github.com/sarnali3515/edu-mosaic-server.git
+- cd edumosaic server file
+- Install dependencies: npm install
+- Set up backend environment variables (MongoDB config): Create a .env file 
+- Run the backend: nodemon index.js
+
